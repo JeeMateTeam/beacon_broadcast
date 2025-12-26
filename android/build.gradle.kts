@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.2.20")
     implementation("org.altbeacon:android-beacon-library:2.19.3")
 }
 
