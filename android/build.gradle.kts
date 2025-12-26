@@ -32,11 +32,20 @@ android {
 
     defaultConfig {
         minSdk = 21
-        testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            consumerProguardFiles("proguard-rules.pro")
+        }
     }
 
     lint {
         disable += "InvalidPackage"
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 }
 

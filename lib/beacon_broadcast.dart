@@ -22,17 +22,65 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
+/// A Flutter plugin for turning your device into a beacon.
+///
+/// This plugin uses AltBeacon library for Android and CoreLocation for iOS.
+/// It provides a builder pattern API for configuring and controlling beacon
+/// advertising.
+///
+/// Example:
+/// ```dart
+/// final beaconBroadcast = BeaconBroadcast()
+///   .setUUID('39ED98FF-2900-441A-802F-9C398FC199D2')
+///   .setMajorId(1)
+///   .setMinorId(100)
+///   .start();
+/// ```
 class BeaconBroadcast {
-  static const String ALTBEACON_LAYOUT =
+  /// AltBeacon layout identifier for Android.
+  static const String altbeaconLayout =
       'm:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25';
-  static const String EDDYSTONE_TLM_LAYOUT =
+
+  /// Eddystone TLM layout identifier for Android.
+  static const String eddystoneTlmLayout =
       'x,s:0-1=feaa,m:2-2=20,d:3-3,d:4-5,d:6-7,d:8-11,d:12-15';
-  static const String EDDYSTONE_UID_LAYOUT =
+
+  /// Eddystone UID layout identifier for Android.
+  static const String eddystoneUidLayout =
       's:0-1=feaa,m:2-2=00,p:3-3:-41,i:4-13,i:14-19';
-  static const String EDDYSTONE_URL_LAYOUT =
+
+  /// Eddystone URL layout identifier for Android.
+  static const String eddystoneUrlLayout =
       's:0-1=feaa,m:2-2=10,p:3-3:-41,i:4-21v';
-  static const String URI_BEACON_LAYOUT =
-      's:0-1=fed8,m:2-2=00,p:3-3:-41,i:4-21v';
+
+  /// URI Beacon layout identifier for Android.
+  static const String uriBeaconLayout = 's:0-1=fed8,m:2-2=00,p:3-3:-41,i:4-21v';
+
+  // Deprecated constants for backward compatibility
+  /// @deprecated Use [altbeaconLayout] instead.
+  // ignore: constant_identifier_names
+  @Deprecated('Use altbeaconLayout instead')
+  static const String ALTBEACON_LAYOUT = altbeaconLayout;
+
+  /// @deprecated Use [eddystoneTlmLayout] instead.
+  // ignore: constant_identifier_names
+  @Deprecated('Use eddystoneTlmLayout instead')
+  static const String EDDYSTONE_TLM_LAYOUT = eddystoneTlmLayout;
+
+  /// @deprecated Use [eddystoneUidLayout] instead.
+  // ignore: constant_identifier_names
+  @Deprecated('Use eddystoneUidLayout instead')
+  static const String EDDYSTONE_UID_LAYOUT = eddystoneUidLayout;
+
+  /// @deprecated Use [eddystoneUrlLayout] instead.
+  // ignore: constant_identifier_names
+  @Deprecated('Use eddystoneUrlLayout instead')
+  static const String EDDYSTONE_URL_LAYOUT = eddystoneUrlLayout;
+
+  /// @deprecated Use [uriBeaconLayout] instead.
+  // ignore: constant_identifier_names
+  @Deprecated('Use uriBeaconLayout instead')
+  static const String URI_BEACON_LAYOUT = uriBeaconLayout;
 
   String? _uuid;
   int? _majorId;
@@ -44,49 +92,73 @@ class BeaconBroadcast {
   int? _manufacturerId;
   List<int>? _extraData;
 
-  static const MethodChannel _methodChannel =
-      MethodChannel('pl.pszklarska.beaconbroadcast/beacon_state');
+  static const MethodChannel _methodChannel = MethodChannel(
+    'pl.pszklarska.beaconbroadcast/beacon_state',
+  );
 
-  static const EventChannel _eventChannel =
-      EventChannel('pl.pszklarska.beaconbroadcast/beacon_events');
+  static const EventChannel _eventChannel = EventChannel(
+    'pl.pszklarska.beaconbroadcast/beacon_events',
+  );
 
   /// Sets UUID for beacon.
   ///
-  /// [uuid] is random string identifier, e.g. "2f234454-cf6d-4a0f-adf2-f4911ba9ffa6"
+  /// [uuid] is a random string identifier, e.g. "2f234454-cf6d-4a0f-adf2-f4911ba9ffa6"
   ///
-  /// This parameter is required for the default layout
+  /// This parameter is required for the default layout.
+  ///
+  /// Returns this instance for method chaining.
   BeaconBroadcast setUUID(String uuid) {
+    if (uuid.isEmpty) {
+      throw const IllegalArgumentException('UUID must not be empty');
+    }
     _uuid = uuid;
     return this;
   }
 
   /// Sets major id for beacon.
   ///
-  /// [majorId] is integer identifier with range between 1 and 65535
+  /// [majorId] is an integer identifier with range between 0 and 65535.
   ///
-  /// This parameter is required for the default layout
+  /// This parameter is required for the default layout.
+  ///
+  /// Returns this instance for method chaining.
   BeaconBroadcast setMajorId(int majorId) {
+    if (majorId < 0 || majorId > 65535) {
+      throw IllegalArgumentException(
+        'MajorId must be between 0 and 65535, got: $majorId',
+      );
+    }
     _majorId = majorId;
     return this;
   }
 
   /// Sets minor id for beacon.
   ///
-  /// [minorId] is integer identifier with range between 1 and 65535
+  /// [minorId] is an integer identifier with range between 0 and 65535.
   ///
-  /// This parameter is required for the default layout
+  /// This parameter is required for the default layout.
+  ///
+  /// Returns this instance for method chaining.
   BeaconBroadcast setMinorId(int minorId) {
+    if (minorId < 0 || minorId > 65535) {
+      throw IllegalArgumentException(
+        'MinorId must be between 0 and 65535, got: $minorId',
+      );
+    }
     _minorId = minorId;
     return this;
   }
 
   /// Sets identifier for beacon.
   ///
-  /// This parameter is **iOS only** (it has no effect on Android). It's string that identifies
-  /// beacon additionally. You can check more info in article
-  /// [Turning an iOS Device into an iBeacon](https://developer.apple.com/documentation/corelocation/turning_an_ios_device_into_an_ibeacon)
+  /// This parameter is **iOS only** (it has no effect on Android).
+  /// It's a string that identifies the beacon additionally.
   ///
-  /// This parameter is optional
+  /// See also: [Turning an iOS Device into an iBeacon](https://developer.apple.com/documentation/corelocation/turning_an_ios_device_into_an_ibeacon)
+  ///
+  /// This parameter is optional.
+  ///
+  /// Returns this instance for method chaining.
   BeaconBroadcast setIdentifier(String identifier) {
     _identifier = identifier;
     return this;
@@ -94,12 +166,17 @@ class BeaconBroadcast {
 
   /// Sets transmission power for beacon.
   ///
-  /// Transmission power determines strength of the signal transmitted by beacon. It's measured in
-  /// dBm. Higher values amplify the signal strength, but also increase power usage.
+  /// Transmission power determines the strength of the signal transmitted by the beacon.
+  /// It's measured in dBm. Higher values amplify the signal strength, but also increase
+  /// power usage.
   ///
-  /// This parameter is optional, if not set, the default value for Android will be -59dB and for
-  /// iOS the default received signal strength indicator (RSSI) value associated with the iOS device
-  /// (see this article for more: [Turning an iOS Device into an iBeacon](https://developer.apple.com/documentation/corelocation/turning_an_ios_device_into_an_ibeacon)
+  /// This parameter is optional. If not set, the default value for Android will be -59 dBm
+  /// and for iOS the default received signal strength indicator (RSSI) value associated
+  /// with the iOS device.
+  ///
+  /// See also: [Turning an iOS Device into an iBeacon](https://developer.apple.com/documentation/corelocation/turning_an_ios_device_into_an_ibeacon)
+  ///
+  /// Returns this instance for method chaining.
   BeaconBroadcast setTransmissionPower(int transmissionPower) {
     _transmissionPower = transmissionPower;
     return this;
@@ -109,13 +186,15 @@ class BeaconBroadcast {
   ///
   /// Advertise mode determines advertising frequency and power consumption.
   ///
-  /// This parameter is **Android only** (it has no effect on iOS). It is optional, if not set, the default value will be [AdvertiseMode.balanced].
-  /// You can use one of the options:
-  /// <ul>
-  /// <li>[AdvertiseMode.lowPower] Consumes less energy, but larger broadcast interval
-  /// <li>[AdvertiseMode.balanced] default: Balance between energy usage and broadcast interval
-  /// <li>[AdvertiseMode.lowLatency] Consumes more energy, but smaller broadcast interval
-  /// </ul>
+  /// This parameter is **Android only** (it has no effect on iOS).
+  /// It is optional. If not set, the default value will be [AdvertiseMode.balanced].
+  ///
+  /// Available options:
+  /// - [AdvertiseMode.lowPower]: Consumes less energy, but larger broadcast interval
+  /// - [AdvertiseMode.balanced]: Default - Balance between energy usage and broadcast interval
+  /// - [AdvertiseMode.lowLatency]: Consumes more energy, but smaller broadcast interval
+  ///
+  /// Returns this instance for method chaining.
   BeaconBroadcast setAdvertiseMode(AdvertiseMode advertiseMode) {
     _advertiseMode = _advertiseModeToInt(advertiseMode);
     return this;
@@ -123,18 +202,22 @@ class BeaconBroadcast {
 
   /// Sets beacon layout.
   ///
-  /// This parameter is **Android only**. It's optional, the default is [ALTBEACON_LAYOUT].
-  /// You can use one of the options:
-  /// <ul>
-  /// <li>[ALTBEACON_LAYOUT]
-  /// <li>[EDDYSTONE_TLM_LAYOUT]
-  /// <li>[EDDYSTONE_UID_LAYOUT]
-  /// <li>[EDDYSTONE_URL_LAYOUT]
-  /// <li>[URI_BEACON_LAYOUT]
-  /// </ul>
+  /// This parameter is **Android only**. It's optional, the default is [altbeaconLayout].
   ///
-  /// **For iOS**, layout will be always iBeacon.
+  /// Available options:
+  /// - [altbeaconLayout]
+  /// - [eddystoneTlmLayout]
+  /// - [eddystoneUidLayout]
+  /// - [eddystoneUrlLayout]
+  /// - [uriBeaconLayout]
+  ///
+  /// **For iOS**, layout will always be iBeacon.
+  ///
+  /// Returns this instance for method chaining.
   BeaconBroadcast setLayout(String layout) {
+    if (layout.isEmpty) {
+      throw const IllegalArgumentException('Layout must not be empty');
+    }
     _layout = layout;
     return this;
   }
@@ -142,9 +225,13 @@ class BeaconBroadcast {
   /// Sets manufacturer id.
   ///
   /// This parameter is **Android only**. It's optional, the default is Radius Network.
-  /// For more information you can check the full list of [Company Identifiers](https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers/).
   ///
-  /// **For iOS**, the manufacturer will be always Apple.
+  /// For more information, check the full list of
+  /// [Company Identifiers](https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers/).
+  ///
+  /// **For iOS**, the manufacturer will always be Apple.
+  ///
+  /// Returns this instance for method chaining.
   BeaconBroadcast setManufacturerId(int manufacturerId) {
     _manufacturerId = manufacturerId;
     return this;
@@ -154,124 +241,191 @@ class BeaconBroadcast {
   ///
   /// This parameter is **Android only**. If beacon layout allows it, you can
   /// add extra bytes to the data transmitted by the beacon.
-  /// Value must be within a range 0-255.
+  /// Each value must be within a range 0-255.
   ///
-  /// For more information check section
+  /// For more information, check section
   /// [Adding extra data](https://github.com/pszklarska/beacon_broadcast#adding-extra-data)
   /// in the documentation.
   ///
-  /// **For iOS**, beacon layout doesn't allow to transmit any extra data.
+  /// **For iOS**, beacon layout doesn't allow transmitting any extra data.
   ///
   /// This parameter is optional.
+  ///
+  /// Returns this instance for method chaining.
+  ///
+  /// Throws [IllegalArgumentException] if any value is outside the valid range.
   BeaconBroadcast setExtraData(List<int> extraData) {
     if (extraData.any((value) => value < 0 || value > 255)) {
-      throw IllegalArgumentException(
-          "Illegal arguments! Extra data values must be within a byte range 0-255");
+      throw const IllegalArgumentException(
+        'Extra data values must be within a byte range 0-255',
+      );
     }
-    _extraData = extraData;
+    _extraData = List<int>.unmodifiable(extraData);
     return this;
   }
 
   /// Starts beacon advertising.
   ///
-  /// Before starting you must set  [_uuid].
-  /// For the default layout, parameters [_majorId], [_minorId] are also required.
-  /// Other parameters as [_identifier], [_transmissionPower], [_advertiseMode], [_layout], [_manufacturerId] are optional.
+  /// Before starting, you must set [setUUID].
+  /// For the default layout, parameters [setMajorId] and [setMinorId] are also required.
+  /// Other parameters such as [setIdentifier], [setTransmissionPower], [setAdvertiseMode],
+  /// [setLayout], [setManufacturerId] are optional.
   ///
-  /// For Android, beacon layout is by default set to AltBeacon (check more details here: [AltBeacon - Transmitting as a Beacon](https://altbeacon.github.io/android-beacon-library/beacon-transmitter.html)).
-  /// On Android system, it's required to have Bluetooth turn on and to give app permission to location.
+  /// For Android, beacon layout is by default set to AltBeacon.
+  /// See also: [AltBeacon - Transmitting as a Beacon](https://altbeacon.github.io/android-beacon-library/beacon-transmitter.html)
   ///
-  /// For iOS, beacon is broadcasting as an iBeacon (check more details here: [Turning an iOS Device into an iBeacon](https://developer.apple.com/documentation/corelocation/turning_an_ios_device_into_an_ibeacon))
-  /// Note that according to the article: "After advertising your app as a beacon, your app must
-  /// continue running in the foreground to broadcast the needed Bluetooth signals. If the user
-  /// quits the app, the system stops advertising the device as a peripheral over Bluetooth.
+  /// On Android, it's required to have Bluetooth turned on and to grant the app
+  /// permission to location and Bluetooth advertising (Android 12+).
+  ///
+  /// For iOS, beacon is broadcasting as an iBeacon.
+  /// See also: [Turning an iOS Device into an iBeacon](https://developer.apple.com/documentation/corelocation/turning_an_ios_device_into_an_ibeacon)
+  ///
+  /// **Important**: After advertising your app as a beacon, your app must continue running
+  /// in the foreground to broadcast the needed Bluetooth signals. If the user quits the app,
+  /// the system stops advertising the device as a peripheral over Bluetooth.
+  ///
+  /// Throws [IllegalArgumentException] if required parameters are missing or invalid.
+  /// Throws [PlatformException] if the native platform call fails.
   Future<void> start() async {
     if (_uuid == null || _uuid!.isEmpty) {
-      throw IllegalArgumentException(
-          "Illegal arguments! UUID must not be null or empty: UUID: $_uuid");
+      throw const IllegalArgumentException('UUID must not be null or empty');
     }
 
-    if ((_layout == null || _layout == ALTBEACON_LAYOUT) &&
+    if ((_layout == null || _layout == altbeaconLayout) &&
         (_majorId == null || _minorId == null)) {
       throw IllegalArgumentException(
-          "Illegal arguments! MajorId and minorId must not be null or empty: "
-          "majorId: $_majorId, minorId: $_minorId");
+        'MajorId and minorId must not be null for default layout: '
+        'majorId: $_majorId, minorId: $_minorId',
+      );
     }
 
     final Map<String, dynamic> params = <String, dynamic>{
-      "uuid": _uuid,
-      "majorId": _majorId,
-      "minorId": _minorId,
-      "transmissionPower": _transmissionPower,
-      "advertiseMode": _advertiseMode,
-      "identifier": _identifier,
-      "layout": _layout,
-      "manufacturerId": _manufacturerId,
-      "extraData": _extraData,
+      'uuid': _uuid,
+      'majorId': _majorId,
+      'minorId': _minorId,
+      'transmissionPower': _transmissionPower,
+      'advertiseMode': _advertiseMode,
+      'identifier': _identifier,
+      'layout': _layout,
+      'manufacturerId': _manufacturerId,
+      'extraData': _extraData,
     };
 
-    await _methodChannel.invokeMethod('start', params);
+    try {
+      await _methodChannel.invokeMethod<void>('start', params);
+    } on PlatformException catch (e) {
+      throw PlatformException(
+        code: e.code,
+        message: e.message ?? 'Failed to start beacon advertising',
+        details: e.details,
+        stacktrace: e.stacktrace,
+      );
+    }
   }
 
-  /// Stops beacon advertising
-  Future<void> stop() async {
-    await _methodChannel.invokeMethod('stop');
-  }
-
-  /// Returns `true` if beacon is advertising
-  Future<bool?> isAdvertising() async {
-    return await _methodChannel.invokeMethod<bool>('isAdvertising');
-  }
-
-  /// Returns Stream of booleans indicating if beacon is advertising.
+  /// Stops beacon advertising.
   ///
-  /// After listening to this Stream, you'll be notified about changes in beacon advertising state.
-  /// Returns `true` if beacon is advertising. See also: [isAdvertising()]
+  /// Throws [PlatformException] if the native platform call fails.
+  Future<void> stop() async {
+    try {
+      await _methodChannel.invokeMethod<void>('stop');
+    } on PlatformException catch (e) {
+      throw PlatformException(
+        code: e.code,
+        message: e.message ?? 'Failed to stop beacon advertising',
+        details: e.details,
+        stacktrace: e.stacktrace,
+      );
+    }
+  }
+
+  /// Returns `true` if beacon is advertising, `false` otherwise.
+  ///
+  /// Throws [PlatformException] if the native platform call fails.
+  Future<bool> isAdvertising() async {
+    try {
+      final bool? result = await _methodChannel.invokeMethod<bool>(
+        'isAdvertising',
+      );
+      return result ?? false;
+    } on PlatformException catch (e) {
+      throw PlatformException(
+        code: e.code,
+        message: e.message ?? 'Failed to check advertising state',
+        details: e.details,
+        stacktrace: e.stacktrace,
+      );
+    }
+  }
+
+  /// Returns a stream of booleans indicating if beacon is advertising.
+  ///
+  /// After listening to this stream, you'll be notified about changes in beacon
+  /// advertising state. Returns `true` if beacon is advertising.
+  ///
+  /// See also: [isAdvertising]
+  ///
+  /// **Note**: Remember to cancel the subscription when done to avoid memory leaks.
   Stream<bool> getAdvertisingStateChange() {
     return _eventChannel.receiveBroadcastStream().cast<bool>();
   }
 
-  /// Checks if device supports transmission. For iOS it returns always true.
+  /// Checks if device supports transmission.
+  ///
+  /// For iOS, it always returns [BeaconStatus.supported].
   ///
   /// Possible values (for Android):
-  /// * [BeaconStatus.supported] device supports transmission
-  /// * [BeaconStatus.notSupportedMinSdk] Android system version on the device is lower than 21
-  /// * [BeaconStatus.notSupportedBle] BLE is not supported on this device
-  /// * [BeaconStatus.notSupportedCannotGetAdvertiser] device does not have a compatible chipset
-  /// or driver
+  /// - [BeaconStatus.supported]: Device supports transmission
+  /// - [BeaconStatus.notSupportedMinSdk]: Android system version is lower than 21
+  /// - [BeaconStatus.notSupportedBle]: BLE is not supported on this device
+  /// - [BeaconStatus.notSupportedCannotGetAdvertiser]: Device does not have a compatible
+  ///   chipset or driver
+  ///
+  /// Throws [PlatformException] if the native platform call fails.
   Future<BeaconStatus> checkTransmissionSupported() async {
-    final int? isTransmissionSupported =
-        await _methodChannel.invokeMethod<int>('isTransmissionSupported');
-    return _beaconStatusFromInt(isTransmissionSupported);
+    try {
+      final int? isTransmissionSupported = await _methodChannel
+          .invokeMethod<int>('isTransmissionSupported');
+      return _beaconStatusFromInt(isTransmissionSupported);
+    } on PlatformException catch (e) {
+      throw PlatformException(
+        code: e.code,
+        message: e.message ?? 'Failed to check transmission support',
+        details: e.details,
+        stacktrace: e.stacktrace,
+      );
+    }
   }
 }
 
+/// Exception thrown when invalid arguments are provided to beacon configuration methods.
 class IllegalArgumentException implements Exception {
+  /// Creates an [IllegalArgumentException] with the given [message].
+  const IllegalArgumentException(this.message);
+
+  /// The error message explaining why the exception was thrown.
   final String message;
 
-  IllegalArgumentException(this.message);
-
   @override
-  String toString() {
-    return "IllegalArgumentException: $message";
-  }
+  String toString() => 'IllegalArgumentException: $message';
 }
 
+/// Status indicating whether the device supports beacon transmission.
 enum BeaconStatus {
-  /// Device supports transmitting as a beacon
+  /// Device supports transmitting as a beacon.
   supported,
 
-  /// Android system version on the device is too low (min. is 21)
+  /// Android system version on the device is too low (minimum is 21).
   notSupportedMinSdk,
 
-  /// Device doesn't support Bluetooth Low Energy
+  /// Device doesn't support Bluetooth Low Energy.
   notSupportedBle,
 
-  /// Device's Bluetooth chipset or driver doesn't support transmitting
-  notSupportedCannotGetAdvertiser
+  /// Device's Bluetooth chipset or driver doesn't support transmitting.
+  notSupportedCannotGetAdvertiser,
 }
 
-Map<int, BeaconStatus> _intToBeaconStatus = {
+const Map<int, BeaconStatus> _intToBeaconStatus = <int, BeaconStatus>{
   0: BeaconStatus.supported,
   1: BeaconStatus.notSupportedMinSdk,
   2: BeaconStatus.notSupportedBle,
@@ -284,26 +438,30 @@ BeaconStatus _beaconStatusFromInt(int? value) {
   return _intToBeaconStatus[value]!;
 }
 
+/// Advertise mode for beacon transmission (Android only).
 enum AdvertiseMode {
-  /// Consumes less energy, but larger broadcast interval
+  /// Consumes less energy, but larger broadcast interval.
   lowPower,
 
-  /// Balance between energy usage and broadcast interval
+  /// Balance between energy usage and broadcast interval (default).
   balanced,
 
-  /// Consumes more energy, but smaller broadcast interval
+  /// Consumes more energy, but smaller broadcast interval.
   lowLatency,
 }
 
-Map<int, AdvertiseMode> _intToAdvertiseMode = {
+const Map<int, AdvertiseMode> _intToAdvertiseMode = <int, AdvertiseMode>{
   0: AdvertiseMode.lowPower,
   1: AdvertiseMode.balanced,
   2: AdvertiseMode.lowLatency,
 };
 
 int? _advertiseModeToInt(AdvertiseMode advMode) {
-  if (!_intToAdvertiseMode.containsValue(advMode)) return null;
-  return _intToAdvertiseMode.entries
-      .firstWhere((element) => element.value == advMode)
-      .key;
+  for (final MapEntry<int, AdvertiseMode> entry
+      in _intToAdvertiseMode.entries) {
+    if (entry.value == advMode) {
+      return entry.key;
+    }
+  }
+  return null;
 }

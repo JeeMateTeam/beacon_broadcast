@@ -1,21 +1,24 @@
 name: beacon_broadcast
-description: A Flutter plugin for turning your device into a beacon. Plugin uses AltBeacon library for Android and
-  CoreLocation for iOS.
+description: A Flutter plugin for turning your device into a beacon. Plugin uses AltBeacon library for Android and CoreLocation for iOS.
 version: 0.3.2
-license: "MIT"
 homepage: https://github.com/rtorrecilhas/beacon_broadcast
+repository: https://github.com/rtorrecilhas/beacon_broadcast
+issue_tracker: https://github.com/rtorrecilhas/beacon_broadcast/issues
+license: MIT
 
 environment:
-  sdk: ">=3.10.0 <4.0.0"
+  sdk: '>=3.10.0 <4.0.0'
+  flutter: '>=3.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
 dev_dependencies:
-  test: ^1.26.0
+  flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter
+  test: ^1.26.0
 
 flutter:
   plugin:

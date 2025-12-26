@@ -26,10 +26,8 @@ public class SwiftBeaconBroadcastPlugin: NSObject, FlutterPlugin, FlutterStreamH
     }
     
     func registerBeaconListener() {
-        beacon.onAdvertisingStateChanged = {isAdvertising in
-            if (self.eventSink != nil) {
-                self.eventSink!(isAdvertising)
-            }
+        beacon.onAdvertisingStateChanged = { [weak self] isAdvertising in
+            self?.eventSink?(isAdvertising)
         }
     }
     
@@ -54,13 +52,51 @@ public class SwiftBeaconBroadcastPlugin: NSObject, FlutterPlugin, FlutterStreamH
     }
     
     private func startBeacon(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
-        var map = call.arguments as? Dictionary<String, Any>
+        guard let map = call.arguments as? [String: Any] else {
+            result(FlutterError(
+                code: "INVALID_ARGUMENT",
+                message: "Arguments must be a map",
+                details: nil
+            ))
+            return
+        }
+        
+        guard let uuid = map["uuid"] as? String, !uuid.isEmpty else {
+            result(FlutterError(
+                code: "INVALID_ARGUMENT",
+                message: "UUID must be a non-empty string",
+                details: nil
+            ))
+            return
+        }
+        
+        guard let majorId = map["majorId"] as? NSNumber else {
+            result(FlutterError(
+                code: "INVALID_ARGUMENT",
+                message: "majorId must be a number",
+                details: nil
+            ))
+            return
+        }
+        
+        guard let minorId = map["minorId"] as? NSNumber else {
+            result(FlutterError(
+                code: "INVALID_ARGUMENT",
+                message: "minorId must be a number",
+                details: nil
+            ))
+            return
+        }
+        
+        let identifier = map["identifier"] as? String ?? ""
+        let transmissionPower = map["transmissionPower"] as? NSNumber
+        
         let beaconData = BeaconData(
-            uuid: map?["uuid"] as! String,
-            majorId: map?["majorId"] as! NSNumber,
-            minorId: map?["minorId"] as! NSNumber,
-            transmissionPower: map?["transmissionPower"] as? NSNumber,
-            identifier: map?["identifier"] as! String
+            uuid: uuid,
+            majorId: majorId,
+            minorId: minorId,
+            transmissionPower: transmissionPower,
+            identifier: identifier
         )
         beacon.start(beaconData: beaconData)
         result(nil)

@@ -18,13 +18,22 @@ class Beacon : NSObject, CBPeripheralManagerDelegate {
     var shouldStartAdvertise: Bool = false
     
     func start(beaconData: BeaconData) {
-        let proximityUUID = UUID(uuidString: beaconData.uuid)
-        let major : CLBeaconMajorValue = CLBeaconMajorValue(truncating: beaconData.majorId)
-        let minor : CLBeaconMinorValue = CLBeaconMinorValue(truncating: beaconData.minorId)
-        let beaconID = beaconData.identifier
+        guard let proximityUUID = UUID(uuidString: beaconData.uuid) else {
+            print("Invalid UUID format: \(beaconData.uuid)")
+            onAdvertisingStateChanged?(false)
+            return
+        }
         
-        let region = CLBeaconRegion(proximityUUID: proximityUUID!,
-                                    major: major, minor: minor, identifier: beaconID)
+        let major: CLBeaconMajorValue = CLBeaconMajorValue(truncating: beaconData.majorId)
+        let minor: CLBeaconMinorValue = CLBeaconMinorValue(truncating: beaconData.minorId)
+        let beaconID = beaconData.identifier.isEmpty ? "com.beacon.default" : beaconData.identifier
+        
+        let region = CLBeaconRegion(
+            proximityUUID: proximityUUID,
+            major: major,
+            minor: minor,
+            identifier: beaconID
+        )
         
         peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
         beaconPeripheralData = region.peripheralData(withMeasuredPower: beaconData.transmissionPower)
@@ -32,9 +41,9 @@ class Beacon : NSObject, CBPeripheralManagerDelegate {
     }
     
     func stop() {
-        if (peripheralManager != nil) {
+        if peripheralManager != nil {
             peripheralManager.stopAdvertising()
-            onAdvertisingStateChanged!(false)
+            onAdvertisingStateChanged?(false)
         }
     }
     
@@ -46,7 +55,12 @@ class Beacon : NSObject, CBPeripheralManagerDelegate {
     }
     
     func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
-        onAdvertisingStateChanged!(peripheral.isAdvertising)
+        if let error = error {
+            print("Error starting advertising: \(error.localizedDescription)")
+            onAdvertisingStateChanged?(false)
+        } else {
+            onAdvertisingStateChanged?(peripheral.isAdvertising)
+        }
     }
     
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
