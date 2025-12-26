@@ -1,6 +1,11 @@
 package pl.pszklarska.beaconbroadcast
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.annotation.NonNull
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.*
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -12,7 +17,7 @@ class BeaconBroadcastPlugin : FlutterPlugin, MethodCallHandler, EventChannel.Str
     private lateinit var methodChannel: MethodChannel
     private lateinit var eventChannel: EventChannel
     private lateinit var beacon: Beacon
-
+    private var context: Context? = null
 
     private var eventSink: EventChannel.EventSink? = null
     private var advertiseCallback: (Boolean) -> Unit = { isAdvertising ->
@@ -20,6 +25,7 @@ class BeaconBroadcastPlugin : FlutterPlugin, MethodCallHandler, EventChannel.Str
     }
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        context = flutterPluginBinding.applicationContext
         beacon = Beacon()
         beacon.init(flutterPluginBinding.applicationContext)
 
@@ -57,6 +63,24 @@ class BeaconBroadcastPlugin : FlutterPlugin, MethodCallHandler, EventChannel.Str
                 arguments["manufacturerId"] as Int?,
                 arguments["extraData"] as List<Int>?
         )
+
+        // Vérifier les permissions pour Android 12+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val context = this.context ?: run {
+                result.error("PERMISSION_ERROR", "Context is not available", null)
+                return
+            }
+            
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) 
+                != PackageManager.PERMISSION_GRANTED) {
+                result.error(
+                    "PERMISSION_DENIED",
+                    "BLUETOOTH_ADVERTISE permission is required for Android 12+. Please grant the permission before starting the beacon.",
+                    null
+                )
+                return
+            }
+        }
 
         beacon.start(beaconData, advertiseCallback)
         result.success(null)

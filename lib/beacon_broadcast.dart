@@ -45,10 +45,10 @@ class BeaconBroadcast {
   List<int>? _extraData;
 
   static const MethodChannel _methodChannel =
-      const MethodChannel('pl.pszklarska.beaconbroadcast/beacon_state');
+      MethodChannel('pl.pszklarska.beaconbroadcast/beacon_state');
 
   static const EventChannel _eventChannel =
-      const EventChannel('pl.pszklarska.beaconbroadcast/beacon_events');
+      EventChannel('pl.pszklarska.beaconbroadcast/beacon_events');
 
   /// Sets UUID for beacon.
   ///
@@ -165,7 +165,7 @@ class BeaconBroadcast {
   /// This parameter is optional.
   BeaconBroadcast setExtraData(List<int> extraData) {
     if (extraData.any((value) => value < 0 || value > 255)) {
-      throw new IllegalArgumentException(
+      throw IllegalArgumentException(
           "Illegal arguments! Extra data values must be within a byte range 0-255");
     }
     _extraData = extraData;
@@ -187,18 +187,18 @@ class BeaconBroadcast {
   /// quits the app, the system stops advertising the device as a peripheral over Bluetooth.
   Future<void> start() async {
     if (_uuid == null || _uuid!.isEmpty) {
-      throw new IllegalArgumentException(
+      throw IllegalArgumentException(
           "Illegal arguments! UUID must not be null or empty: UUID: $_uuid");
     }
 
     if ((_layout == null || _layout == ALTBEACON_LAYOUT) &&
         (_majorId == null || _minorId == null)) {
-      throw new IllegalArgumentException(
+      throw IllegalArgumentException(
           "Illegal arguments! MajorId and minorId must not be null or empty: "
           "majorId: $_majorId, minorId: $_minorId");
     }
 
-    Map params = <String, dynamic>{
+    final Map<String, dynamic> params = <String, dynamic>{
       "uuid": _uuid,
       "majorId": _majorId,
       "minorId": _minorId,
@@ -220,7 +220,7 @@ class BeaconBroadcast {
 
   /// Returns `true` if beacon is advertising
   Future<bool?> isAdvertising() async {
-    return await _methodChannel.invokeMethod('isAdvertising');
+    return await _methodChannel.invokeMethod<bool>('isAdvertising');
   }
 
   /// Returns Stream of booleans indicating if beacon is advertising.
@@ -240,17 +240,18 @@ class BeaconBroadcast {
   /// * [BeaconStatus.notSupportedCannotGetAdvertiser] device does not have a compatible chipset
   /// or driver
   Future<BeaconStatus> checkTransmissionSupported() async {
-    var isTransmissionSupported =
-        await _methodChannel.invokeMethod('isTransmissionSupported');
+    final int? isTransmissionSupported =
+        await _methodChannel.invokeMethod<int>('isTransmissionSupported');
     return _beaconStatusFromInt(isTransmissionSupported);
   }
 }
 
 class IllegalArgumentException implements Exception {
-  final message;
+  final String message;
 
   IllegalArgumentException(this.message);
 
+  @override
   String toString() {
     return "IllegalArgumentException: $message";
   }
@@ -277,8 +278,9 @@ Map<int, BeaconStatus> _intToBeaconStatus = {
 };
 
 BeaconStatus _beaconStatusFromInt(int? value) {
-  if (!_intToBeaconStatus.containsKey(value))
+  if (value == null || !_intToBeaconStatus.containsKey(value)) {
     return BeaconStatus.notSupportedCannotGetAdvertiser;
+  }
   return _intToBeaconStatus[value]!;
 }
 

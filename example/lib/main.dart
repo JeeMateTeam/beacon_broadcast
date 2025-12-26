@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:beacon_broadcast/beacon_broadcast.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() => runApp(MyApp());
 
@@ -24,7 +25,8 @@ class _MyAppState extends State<MyApp> {
   BeaconBroadcast beaconBroadcast = BeaconBroadcast();
 
   bool _isAdvertising = false;
-  late BeaconStatus _isTransmissionSupported;
+  BeaconStatus _isTransmissionSupported =
+      BeaconStatus.notSupportedCannotGetAdvertiser;
   late StreamSubscription<bool> _isAdvertisingSubscription;
 
   @override
@@ -73,18 +75,40 @@ class _MyAppState extends State<MyApp> {
                 Container(height: 16.0),
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      beaconBroadcast
-                          .setUUID(uuid)
-                          .setMajorId(majorId)
-                          .setMinorId(minorId)
-                          .setTransmissionPower(transmissionPower)
-                          .setAdvertiseMode(advertiseMode)
-                          .setIdentifier(identifier)
-                          .setLayout(layout)
-                          .setManufacturerId(manufacturerId)
-                          .setExtraData(extraData)
-                          .start();
+                    onPressed: () async {
+                      // Demander la permission BLUETOOTH_ADVERTISE pour Android 12+
+                      final status =
+                          await Permission.bluetoothAdvertise.request();
+                      if (status.isGranted) {
+                        try {
+                          await beaconBroadcast
+                              .setUUID(uuid)
+                              .setMajorId(majorId)
+                              .setMinorId(minorId)
+                              .setTransmissionPower(transmissionPower)
+                              .setAdvertiseMode(advertiseMode)
+                              .setIdentifier(identifier)
+                              .setLayout(layout)
+                              .setManufacturerId(manufacturerId)
+                              .setExtraData(extraData)
+                              .start();
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Erreur: $e')),
+                            );
+                          }
+                        }
+                      } else {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'La permission BLUETOOTH_ADVERTISE est requise pour démarrer le beacon.'),
+                            ),
+                          );
+                        }
+                      }
                     },
                     child: Text('START'),
                   ),
@@ -118,7 +142,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
-    _isAdvertisingSubscription?.cancel();
+    _isAdvertisingSubscription.cancel();
     super.dispose();
   }
 }
