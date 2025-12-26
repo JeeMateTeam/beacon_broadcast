@@ -1,29 +1,85 @@
+## 0.4.0
+
+### Architecture & Code Refactoring
+- Implemented platform interface pattern for better testability and maintainability
+- Added `BeaconBroadcastPlatformInterface` for abstract platform implementation
+- Added `BeaconBroadcastMethodChannel` for method channel communication
+- Refactored main plugin file to use platform interface pattern
+- Enhanced test coverage with improved mock platform implementation
+
+### iOS Improvements
+- Refactored iOS implementation to use Swift Package Manager structure
+- Added Swift Package support with new `Package.swift` configuration
+- Reorganized iOS source files into proper Swift Package structure
+- Updated podspec to use new source file structure
+- Set minimum iOS deployment target to 12.0
+- Updated Swift version to 5.9 in podspec
+- Enhanced podspec with improved summary and description
+- Removed obsolete header files and Objective-C bridge code
+- Improved Flutter integration with `FlutterGeneratedPluginSwiftPackage`
+
+### iOS Configuration Updates
+- Updated minimum iOS version to 13.0 in project settings
+- Refactored Podfile for improved Flutter integration
+- Added SceneDelegate for multi-scene support
+- Enhanced AppDelegate for Swift 5 compatibility
+- Added Bluetooth usage descriptions in Info.plist
+- Updated Xcode project settings for Xcode 15 compatibility
+- Added pre-action script for Flutter framework preparation in Xcode scheme
+- Removed obsolete Podfile.lock from version control
+
+### macOS Support
+- Added Podfile for macOS platform support
+- Added generated plugin registrant files for macOS
+- Added Flutter ephemeral configuration for macOS
+
+### Linux Support
+- Added generated plugin registrant files for Linux platform
+- Added CMake configuration for Linux Flutter integration
+
+### Build & Configuration
+- Comprehensive `.gitignore` update to exclude generated files and build artifacts
+- Added patterns for iOS ephemeral files, generated plugin registrants, and platform-specific build outputs
+- Removed obsolete generated files from version control
+- Added `analysis_options.yaml` for Dart and Flutter linting in example app
+- Updated `.metadata` files for project structure
+
+### Example App Improvements
+- Added Android dark theme support with `values-night/styles.xml`
+- Added Android launch background drawable for API 21+
+- Added iOS test target with `RunnerTests.swift`
+- Updated example app to use new plugin API
+
+### Dependencies
+- Updated plugin metadata in `pubspec.yaml`
+- Maintained compatibility with Flutter >=3.0.0 and Dart SDK >=3.10.0 <4.0.0
+
 ## 0.3.3
 
-### Configuration et build
-- Migration de la configuration Android vers Kotlin DSL
-- Mise à jour de Gradle vers la version 8.4
-- Mise à jour de Kotlin dans la configuration Android
-- Ajout de `analysis_options.yaml` pour le linting Dart et Flutter
-- Mise à jour des contraintes SDK (>=3.10.0 <4.0.0) et Flutter (>=3.0.0)
+### Build & Configuration
+- Migrated Android configuration to Kotlin DSL
+- Updated Gradle to version 8.4
+- Updated Kotlin in Android configuration
+- Added `analysis_options.yaml` for Dart and Flutter linting
+- Updated SDK constraints (>=3.10.0 <4.0.0) and Flutter (>=3.0.0)
 
 ### Permissions
-- Ajout des permissions Bluetooth nécessaires pour la diffusion de beacon sur Android 12 et versions supérieures
+- Added required Bluetooth permissions for beacon broadcasting on Android 12 and above
 
-### Améliorations du code
-- Amélioration de la gestion d'erreurs dans la configuration Android
-- Amélioration de la validation des UUID dans le code Swift
-- Refactorisation du code Swift pour une meilleure robustesse
+### Code Improvements
+- Improved error handling in Android configuration
+- Improved UUID validation in Swift code
+- Refactored Swift code for better robustness
 
-### Dépendances et métadonnées
-- Ajout de la licence MIT dans `pubspec.yaml`
-- Ajout des métadonnées de repository et issue tracker dans `pubspec.yaml`
-- Mise à jour de la dépendance de test vers `^1.26.0`
-- Mise à jour de `flutter_lints` vers `^5.0.0`
+### Dependencies & Metadata
+- Added MIT license in `pubspec.yaml`
+- Added repository and issue tracker metadata in `pubspec.yaml`
+- Updated test dependency to `^1.26.0`
+- Updated `flutter_lints` to `^5.0.0`
 
 ## 0.3.1
 
-Added support for android apps targetting SDK 31 and above
+Added support for Android apps targeting SDK 31 and above
 
 ## 0.3.0
 
