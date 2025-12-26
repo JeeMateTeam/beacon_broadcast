@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:beacon_broadcast/beacon_broadcast.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class _MyAppState extends State<MyApp> {
   static const List<int> extraData = [100];
 
   BeaconBroadcast beaconBroadcast = BeaconBroadcast();
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   bool _isAdvertising = false;
   BeaconStatus _isTransmissionSupported =
@@ -51,6 +53,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: _scaffoldMessengerKey,
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Beacon Broadcast'),
@@ -76,10 +79,17 @@ class _MyAppState extends State<MyApp> {
                 Center(
                   child: ElevatedButton(
                     onPressed: () async {
-                      // Demander la permission BLUETOOTH_ADVERTISE pour Android 12+
-                      final status =
-                          await Permission.bluetoothAdvertise.request();
-                      if (status.isGranted) {
+                      bool hasPermission = true;
+                      
+                      // Sur Android, demander explicitement la permission
+                      if (Platform.isAndroid) {
+                        PermissionStatus bluetoothAdvertiseStatus = await Permission.bluetoothAdvertise.request();
+                        hasPermission = bluetoothAdvertiseStatus.isGranted;
+                      }
+                      // Sur iOS, la permission sera demandée automatiquement par le système
+                      // quand CBPeripheralManager est initialisé dans le plugin
+                      
+                      if (hasPermission || Platform.isIOS) {
                         try {
                           await beaconBroadcast
                               .setUUID(uuid)
@@ -93,18 +103,18 @@ class _MyAppState extends State<MyApp> {
                               .setExtraData(extraData)
                               .start();
                         } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                          if (mounted && _scaffoldMessengerKey.currentState != null) {
+                            _scaffoldMessengerKey.currentState!.showSnackBar(
                               SnackBar(content: Text('Erreur: $e')),
                             );
                           }
                         }
                       } else {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                        if (mounted && _scaffoldMessengerKey.currentState != null) {
+                          _scaffoldMessengerKey.currentState!.showSnackBar(
                             const SnackBar(
                               content: Text(
-                                  'La permission BLUETOOTH_ADVERTISE est requise pour démarrer le beacon.'),
+                                  'La permission Bluetooth est requise pour démarrer le beacon.'),
                             ),
                           );
                         }
