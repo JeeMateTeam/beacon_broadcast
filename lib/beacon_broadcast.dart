@@ -22,6 +22,8 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
+import 'package:beacon_broadcast/beacon_broadcast_platform_interface.dart';
+
 /// A Flutter plugin for turning your device into a beacon.
 ///
 /// This plugin uses AltBeacon library for Android and CoreLocation for iOS.
@@ -91,14 +93,6 @@ class BeaconBroadcast {
   String? _layout;
   int? _manufacturerId;
   List<int>? _extraData;
-
-  static const MethodChannel _methodChannel = MethodChannel(
-    'pl.pszklarska.beaconbroadcast/beacon_state',
-  );
-
-  static const EventChannel _eventChannel = EventChannel(
-    'pl.pszklarska.beaconbroadcast/beacon_events',
-  );
 
   /// Sets UUID for beacon.
   ///
@@ -311,51 +305,21 @@ class BeaconBroadcast {
       'extraData': _extraData,
     };
 
-    try {
-      await _methodChannel.invokeMethod<void>('start', params);
-    } on PlatformException catch (e) {
-      throw PlatformException(
-        code: e.code,
-        message: e.message ?? 'Failed to start beacon advertising',
-        details: e.details,
-        stacktrace: e.stacktrace,
-      );
-    }
+    await BeaconBroadcastPlatform.instance.start(params);
   }
 
   /// Stops beacon advertising.
   ///
   /// Throws [PlatformException] if the native platform call fails.
   Future<void> stop() async {
-    try {
-      await _methodChannel.invokeMethod<void>('stop');
-    } on PlatformException catch (e) {
-      throw PlatformException(
-        code: e.code,
-        message: e.message ?? 'Failed to stop beacon advertising',
-        details: e.details,
-        stacktrace: e.stacktrace,
-      );
-    }
+    await BeaconBroadcastPlatform.instance.stop();
   }
 
   /// Returns `true` if beacon is advertising, `false` otherwise.
   ///
   /// Throws [PlatformException] if the native platform call fails.
   Future<bool> isAdvertising() async {
-    try {
-      final bool? result = await _methodChannel.invokeMethod<bool>(
-        'isAdvertising',
-      );
-      return result ?? false;
-    } on PlatformException catch (e) {
-      throw PlatformException(
-        code: e.code,
-        message: e.message ?? 'Failed to check advertising state',
-        details: e.details,
-        stacktrace: e.stacktrace,
-      );
-    }
+    return BeaconBroadcastPlatform.instance.isAdvertising();
   }
 
   /// Returns a stream of booleans indicating if beacon is advertising.
@@ -367,7 +331,7 @@ class BeaconBroadcast {
   ///
   /// **Note**: Remember to cancel the subscription when done to avoid memory leaks.
   Stream<bool> getAdvertisingStateChange() {
-    return _eventChannel.receiveBroadcastStream().cast<bool>();
+    return BeaconBroadcastPlatform.instance.getAdvertisingStateChange();
   }
 
   /// Checks if device supports transmission.
@@ -383,18 +347,9 @@ class BeaconBroadcast {
   ///
   /// Throws [PlatformException] if the native platform call fails.
   Future<BeaconStatus> checkTransmissionSupported() async {
-    try {
-      final int? isTransmissionSupported = await _methodChannel
-          .invokeMethod<int>('isTransmissionSupported');
-      return _beaconStatusFromInt(isTransmissionSupported);
-    } on PlatformException catch (e) {
-      throw PlatformException(
-        code: e.code,
-        message: e.message ?? 'Failed to check transmission support',
-        details: e.details,
-        stacktrace: e.stacktrace,
-      );
-    }
+    final int isTransmissionSupported = await BeaconBroadcastPlatform.instance
+        .isTransmissionSupported();
+    return _beaconStatusFromInt(isTransmissionSupported);
   }
 }
 
@@ -431,8 +386,8 @@ const Map<int, BeaconStatus> _intToBeaconStatus = <int, BeaconStatus>{
   2: BeaconStatus.notSupportedBle,
 };
 
-BeaconStatus _beaconStatusFromInt(int? value) {
-  if (value == null || !_intToBeaconStatus.containsKey(value)) {
+BeaconStatus _beaconStatusFromInt(int value) {
+  if (!_intToBeaconStatus.containsKey(value)) {
     return BeaconStatus.notSupportedCannotGetAdvertiser;
   }
   return _intToBeaconStatus[value]!;
