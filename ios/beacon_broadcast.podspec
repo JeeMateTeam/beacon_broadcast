@@ -12,7 +12,7 @@ A new flutter plugin project.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'beacon_broadcast/Sources/beacon_broadcast/**/*.{h,m,swift}'
+  s.source_files = 'beacon_broadcast/Sources/beacon_broadcast/**/*.{h,swift}'
   s.public_header_files = 'beacon_broadcast/Sources/beacon_broadcast/include/**/*.h'
   s.dependency 'Flutter'
 
