@@ -5,6 +5,7 @@ homepage: https://github.com/JeeMateTeam/beacon_broadcast
 repository: https://github.com/JeeMateTeam/beacon_broadcast
 issue_tracker: https://github.com/JeeMateTeam/beacon_broadcast/issues
 license: MIT
+publish_to: https://dart.cloudsmith.io/jeemate-team/dart-package/
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
