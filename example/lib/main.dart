@@ -24,7 +24,8 @@ class _MyAppState extends State<MyApp> {
   static const List<int> extraData = [100];
 
   BeaconBroadcast beaconBroadcast = BeaconBroadcast();
-  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   bool _isAdvertising = false;
   BeaconStatus _isTransmissionSupported =
@@ -80,15 +81,16 @@ class _MyAppState extends State<MyApp> {
                   child: ElevatedButton(
                     onPressed: () async {
                       bool hasPermission = true;
-                      
+
                       // Sur Android, demander explicitement la permission
                       if (Platform.isAndroid) {
-                        PermissionStatus bluetoothAdvertiseStatus = await Permission.bluetoothAdvertise.request();
+                        PermissionStatus bluetoothAdvertiseStatus =
+                            await Permission.bluetoothAdvertise.request();
                         hasPermission = bluetoothAdvertiseStatus.isGranted;
                       }
                       // Sur iOS, la permission sera demandée automatiquement par le système
                       // quand CBPeripheralManager est initialisé dans le plugin
-                      
+
                       if (hasPermission || Platform.isIOS) {
                         try {
                           await beaconBroadcast
@@ -103,14 +105,16 @@ class _MyAppState extends State<MyApp> {
                               .setExtraData(extraData)
                               .start();
                         } catch (e) {
-                          if (mounted && _scaffoldMessengerKey.currentState != null) {
+                          if (mounted &&
+                              _scaffoldMessengerKey.currentState != null) {
                             _scaffoldMessengerKey.currentState!.showSnackBar(
                               SnackBar(content: Text('Erreur: $e')),
                             );
                           }
                         }
                       } else {
-                        if (mounted && _scaffoldMessengerKey.currentState != null) {
+                        if (mounted &&
+                            _scaffoldMessengerKey.currentState != null) {
                           _scaffoldMessengerKey.currentState!.showSnackBar(
                             const SnackBar(
                               content: Text(
