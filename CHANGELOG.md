@@ -1,3 +1,8 @@
+## 0.4.1
+
+### Dependencies
+- Updated Flutter SDK constraint to `>=3.38.0` for compatibility with latest Flutter versions
+
 ## 0.4.0
 
 ### Architecture & Code Refactoring

@@ -90,3 +90,4 @@ coverage/
 # Keep pubspec.lock at root for plugin reproducibility
 # But ignore it in example/
 example/pubspec.lock
+pubspec.lock
