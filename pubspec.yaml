@@ -9,7 +9,7 @@ publish_to: https://dart.cloudsmith.io/jeemate-team/dart-package/
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
-  flutter: '>=3.0.0'
+  flutter: '>=3.38.0'
 
 dependencies:
   flutter:
